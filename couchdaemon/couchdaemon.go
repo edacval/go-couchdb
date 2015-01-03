@@ -142,8 +142,7 @@ func logwrite(msg interface{}, opts *json.RawMessage) error {
             // still do nothing, we're super cool
             break
         default:
-            fmt.Printf("Unsupported type for JSON: %T", msg)
-            panic("MEOW")
+            panic(fmt.Sprintf("Unsupported type for JSON: %T\n", msg))
     }
 	if opts == nil {
 		return request(nil, "log", msg)
