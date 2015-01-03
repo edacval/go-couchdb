@@ -100,11 +100,11 @@ func ServerURL() (string, error) {
 type LogWriter interface {
 	io.Writer
 	// Err writes a message with level "error"
-	Err(msg string) error
+	Err(msg interface{}) error
 	// Info writes a message with level "info"
-	Info(msg string) error
+	Info(msg interface{}) error
 	// Info writes a message with level "debug"
-	Debug(msg string) error
+	Debug(msg interface{}) error
 }
 
 type logger struct{}
@@ -112,9 +112,9 @@ type logger struct{}
 // NewLogWriter creates a log writer that outputs to the CouchDB log.
 func NewLogWriter() LogWriter { return logger{} }
 
-func (logger) Err(msg string) error   { return logwrite(msg, &optsError) }
-func (logger) Info(msg string) error  { return logwrite(msg, &optsInfo) }
-func (logger) Debug(msg string) error { return logwrite(msg, &optsDebug) }
+func (logger) Err(msg interface{}) error   { return logwrite(msg, &optsError) }
+func (logger) Info(msg interface{}) error  { return logwrite(msg, &optsInfo) }
+func (logger) Debug(msg interface{}) error { return logwrite(msg, &optsDebug) }
 
 func (logger) Write(msg []byte) (int, error) {
 	if err := logwrite(string(msg), nil); err != nil {
@@ -129,8 +129,22 @@ var (
 	optsDebug = json.RawMessage(`{"level":"debug"}`)
 )
 
-func logwrite(msg string, opts *json.RawMessage) error {
-	msg = strings.TrimRight(msg, "\n")
+func logwrite(msg interface{}, opts *json.RawMessage) error {
+    switch msg.(type) {
+        case string:
+            
+            msg = strings.TrimRight(msg.(string), "\n")
+            break
+        case int, float64, bool:
+            // do nothing, we're cool
+            break
+        case map[string]string, map[string]interface{}, []interface{}:
+            // still do nothing, we're super cool
+            break
+        default:
+            fmt.Printf("Unsupported type for JSON: %T", msg)
+            panic("MEOW")
+    }
 	if opts == nil {
 		return request(nil, "log", msg)
 	}
