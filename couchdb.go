@@ -142,6 +142,22 @@ func (db *DB) Rev(id string) (string, error) {
 	return responseRev(db.closedRequest("HEAD", path(db.name, id), nil))
 }
 
+// Post stores a new document into the given database.
+func (db *DB) Post(doc interface{}) (id, rev string, err error) {
+	path := revpath("", db.name)
+	// TODO: make it possible to stream encoder output somehow
+	json, err := json.Marshal(doc)
+	if err != nil {
+		return "", "", err
+	}
+	b := bytes.NewReader(json)
+	resp, err := db.request("POST", path, b)
+	if err != nil {
+		return "", "", err
+	}
+	return responseIDRev(resp)
+}
+
 // Put stores a document into the given database.
 func (db *DB) Put(id string, doc interface{}, rev string) (newrev string, err error) {
 	path := revpath(rev, db.name, id)

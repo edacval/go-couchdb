@@ -71,6 +71,9 @@ func (t *transport) request(method, path string, body io.Reader) (*http.Response
 	if err != nil {
 		return nil, err
 	}
+	if method != "GET" {
+		req.Header.Set("Content-Type", "application/json")
+	}
 	resp, err := t.http.Do(req)
 	if err != nil {
 		return nil, err
@@ -187,6 +190,18 @@ func responseRev(resp *http.Response, err error) (string, error) {
 	} else {
 		return etag[1 : len(etag)-1], nil
 	}
+}
+
+// responseRev returns the ID and Rev provided in the JSON body
+func responseIDRev(resp *http.Response) (string, string, error) {
+	var res struct {
+		ID  string `json:"id"`
+		Rev string `json:"rev"`
+	}
+	if err := readBody(resp, &res); err != nil {
+		return "", "", err
+	}
+	return res.ID, res.Rev, nil
 }
 
 func readBody(resp *http.Response, v interface{}) error {
