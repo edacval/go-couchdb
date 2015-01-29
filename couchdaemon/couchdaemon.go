@@ -130,22 +130,14 @@ var (
 )
 
 func logwrite(msg interface{}, opts *json.RawMessage) error {
-    switch msg.(type) {
+	switch msg.(type) {
         case string:
-            
-            msg = strings.TrimRight(msg.(string), "\n")
+			msg = strings.TrimRight(msg.(string), "\n")
             break
-        case int, float64, bool:
-            // do nothing, we're cool
-            break
-        case map[string]string, map[string]interface{}, []interface{}:
-            // still do nothing, we're super cool
-            break
-		case json.RawMessage:
-			// this should be cool too
-			break
         default:
             //panic(fmt.Sprintf("Unsupported type for JSON: %T\n", msg))
+			bytes, _ := json.Marshal(msg)
+			msg = fmt.Sprintf(`"%s"`,bytes)
 			break;
     }
 	if opts == nil {
